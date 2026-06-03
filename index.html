@@ -160,7 +160,8 @@ select.sel{background:var(--surface);border:1px solid var(--border2);color:var(-
     </div>
     <div class="form-row">
       <label class="form-label">Operation</label>
-      <select class="fsel" id="fOp"></select>
+      <select class="fsel" id="fOp" onchange="onOpSelect()"></select>
+      <input class="fsel" id="fOpCustom" type="text" placeholder="พิมพ์ชื่อ operation..." style="margin-top:8px;display:none;" oninput="onOpInput()">
     </div>
     <div class="form-row">
       <label class="form-label">ช่วงเวลา</label>
@@ -382,7 +383,37 @@ function buildDayBtns(){
     }).join('');
 }
 function buildOpSelect(){
-  document.getElementById('fOp').innerHTML = OPS.map(o=>`<option value="${o}">${o}</option>`).join('');
+  document.getElementById('fOp').innerHTML =
+    OPS.map(o=>`<option value="${o}">${o}</option>`).join('') +
+    `<option value="__custom__">✏️ พิมพ์เอง...</option>`;
+}
+function onOpSelect(){
+  const isCustom = document.getElementById('fOp').value === '__custom__';
+  const inp = document.getElementById('fOpCustom');
+  inp.style.display = isCustom ? 'block' : 'none';
+  if (isCustom) { inp.value = ''; inp.focus(); }
+}
+function onOpInput(){ /* live — no action needed */ }
+function getOpValue(){
+  const sel = document.getElementById('fOp').value;
+  if (sel === '__custom__') {
+    const v = document.getElementById('fOpCustom').value.trim();
+    return v || null;
+  }
+  return sel;
+}
+function setOpValue(val){
+  const sel = document.getElementById('fOp');
+  const inp = document.getElementById('fOpCustom');
+  const exists = OPS.includes(val);
+  if (exists) {
+    sel.value = val;
+    inp.style.display = 'none';
+  } else {
+    sel.value = '__custom__';
+    inp.style.display = 'block';
+    inp.value = val;
+  }
 }
 function buildDocBtns(){
   document.getElementById('docBtns').innerHTML =
@@ -516,6 +547,8 @@ function openAdd(doc,startMin){
   document.getElementById('modalTitle').innerHTML='➕ เพิ่ม Operation<span class="modal-subtitle">'+DAY_CFG[curDay].label+' '+dt.getDate()+' '+THAI_MONTHS[dt.getMonth()]+'</span>';
   document.getElementById('btnDelete').style.display='none';
   document.getElementById('modalConflict').classList.remove('show');
+  document.getElementById('fOpCustom').style.display='none';
+  document.getElementById('fOpCustom').value='';
   onTimeChange();
   document.getElementById('overlay').classList.remove('hidden');
 }
@@ -524,7 +557,7 @@ function openEdit(id){
   editId=id; selDoc=op.doctor;
   buildDocBtns();
   buildTimeSelects(op.startMin, op.endMin);
-  document.getElementById('fOp').value=op.op;
+  setOpValue(op.op);
   const dt=getDate(curYear,curMonth,curWeek,curDay);
   document.getElementById('modalTitle').innerHTML='✏️ แก้ไข Operation<span class="modal-subtitle">'+DAY_CFG[curDay].label+' '+dt.getDate()+' '+THAI_MONTHS[dt.getMonth()]+'</span>';
   document.getElementById('btnDelete').style.display='block';
@@ -550,12 +583,14 @@ function checkModalConflict(){
 function saveOp(){
   const s=+document.getElementById('fStart').value, e=+document.getElementById('fEnd').value;
   if(e<=s){ alert('เวลาสิ้นสุดต้องมากกว่าเวลาเริ่ม'); return; }
+  const opVal = getOpValue();
+  if(!opVal){ alert('กรุณาระบุชื่อ operation'); return; }
   const k=dayKey();
   let ops=getOps(k);
   if(editId){
-    ops=ops.map(o=>o.id===editId?{...o,doctor:selDoc,op:document.getElementById('fOp').value,startMin:s,endMin:e}:o);
+    ops=ops.map(o=>o.id===editId?{...o,doctor:selDoc,op:opVal,startMin:s,endMin:e}:o);
   } else {
-    ops=[...ops,{id:genId(),doctor:selDoc,op:document.getElementById('fOp').value,startMin:s,endMin:e}];
+    ops=[...ops,{id:genId(),doctor:selDoc,op:opVal,startMin:s,endMin:e}];
   }
   opsData[k]=ops;
   scheduleSave(); closeModal(); renderAll();
