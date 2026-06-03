@@ -96,6 +96,23 @@ select.sel{background:var(--surface);border:1px solid var(--border2);color:var(-
 </head>
 <body>
 
+<!-- Password gate -->
+<div id="pwGate" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:300;">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px 28px;width:320px;max-width:92vw;text-align:center;">
+    <div style="font-size:.68rem;font-weight:700;color:var(--p1);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">สูตินรีเวช · OB-GYN</div>
+    <div style="font-size:1.2rem;font-weight:800;margin-bottom:6px;">OR Elective Schedule</div>
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:24px;">กรุณาใส่รหัสผ่านเพื่อเข้าใช้งาน</div>
+    <input id="pwInput" type="password" placeholder="รหัสผ่าน"
+      style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:8px;font-family:inherit;font-size:1rem;outline:none;text-align:center;letter-spacing:.1em;margin-bottom:10px;"
+      onkeydown="if(event.key==='Enter') checkPw()">
+    <div id="pwError" style="font-size:.75rem;color:#fb923c;min-height:18px;margin-bottom:10px;"></div>
+    <button onclick="checkPw()"
+      style="width:100%;padding:10px;border:none;border-radius:8px;background:var(--p1);color:#0f0a1a;font-weight:700;font-size:.95rem;cursor:pointer;">
+      เข้าสู่ระบบ
+    </button>
+  </div>
+</div>
+
 <!-- Loading screen -->
 <div class="loading-screen" id="loadingScreen">
   <div class="spinner"></div>
@@ -203,6 +220,21 @@ const DAY_CFG = {
   4:{label:"ศุกร์",    start:13*60,   end:16*60},
 };
 const PX = 2.6;
+const PW = "Obksh";
+
+// ── PASSWORD GATE ──────────────────────────────────────
+function checkPw(){
+  const val = document.getElementById('pwInput').value;
+  if(val === PW){
+    document.getElementById('pwGate').style.display = 'none';
+    document.getElementById('pwInput').value = '';
+  } else {
+    document.getElementById('pwError').textContent = '❌ รหัสผ่านไม่ถูกต้อง';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+    setTimeout(()=>{ document.getElementById('pwError').textContent=''; }, 2500);
+  }
+}
 
 // ── STATE ──────────────────────────────────────────────
 let opsData   = {};
