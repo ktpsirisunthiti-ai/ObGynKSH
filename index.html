@@ -209,8 +209,7 @@ const DOC_COLORS = [
 ];
 const OPS = [
   "Cesarean section","Hysterectomy","Myomectomy","Ovarian cystectomy",
-  "Salpingectomy","Diagnostic laparoscopy","D&C","Colporrhaphy",
-  "Pelvic floor repair","Cervical conization","Tubal ligation","Endometrial biopsy",
+  "Salpingectomy","MVA","D&C","Cervical conization","Tubal ligation","Endometrial biopsy",
 ];
 const DAY_CFG = {
   0:{label:"จันทร์",   start:13*60,   end:16*60},
@@ -238,14 +237,38 @@ function checkPw(){
 
 // ── STATE ──────────────────────────────────────────────
 let opsData   = {};
-let curDay    = 0;
-let curWeek   = 0;   // 0-based week index within month (0–4)
-let curYear   = new Date().getFullYear();
-let curMonth  = new Date().getMonth(); // 0=Jan
 let editId    = null;
 let selDoc    = DOCTORS[0];
 let resizeState = null;
 let saveTimer   = null;
+
+// Initialize to today
+const _today = new Date();
+let curYear  = _today.getFullYear();
+let curMonth = _today.getMonth();
+
+// Find which week index today falls in
+function findTodayWeek(year, month) {
+  let d = new Date(year, month, 1);
+  while (d.getDay() !== 1) d.setDate(d.getDate() + 1); // first Monday
+  const todayDate = new Date(year, month, _today.getDate());
+  let w = 0;
+  while (true) {
+    const fri = new Date(d); fri.setDate(fri.getDate() + 6);
+    if (todayDate >= d && todayDate <= fri) return w;
+    d.setDate(d.getDate() + 7); w++;
+    if (w > 5) return 0;
+  }
+}
+// JS getDay: 0=Sun,1=Mon,...,5=Fri,6=Sat → map to DAY_CFG index 0-4
+function todayDayIdx() {
+  const jsDay = _today.getDay(); // 0=Sun
+  if (jsDay === 0 || jsDay === 6) return 0; // weekend → default Mon
+  return jsDay - 1; // Mon=0, Tue=1, ... Fri=4
+}
+
+let curWeek = findTodayWeek(curYear, curMonth);
+let curDay  = todayDayIdx();
 
 const THAI_MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
 
